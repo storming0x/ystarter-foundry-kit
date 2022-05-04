@@ -5,13 +5,12 @@ import {TestFixture} from "./utils/TestFixture.sol";
 import {StrategyParams} from "@yearnvaults/contracts/BaseStrategy.sol";
 import "forge-std/console.sol";
 
-
 contract YieldTokenTest is TestFixture {
     function setUp() public override {
         super.setUp();
     }
 
-     function testSetupVaultOK() public {
+    function testSetupVaultOK() public {
         console.log("address of vault", address(vault));
         assertTrue(address(0) != address(vault));
         assertEq(vault.token(), address(want));
@@ -40,7 +39,7 @@ contract YieldTokenTest is TestFixture {
         assertEq(vault.balanceOf(user), _shares);
 
         skip(3 minutes);
-        
+
         vm.prank(strategist);
         strategy.harvest();
         assertRelApproxEq(strategy.estimatedTotalAssets(), _amount, DELTA);
@@ -69,7 +68,7 @@ contract YieldTokenTest is TestFixture {
 
         uint256 beforePps = vault.pricePerShare();
         console.log("beforePps", beforePps);
-        uint256 yTokenPps = yToken.convertToAssets(1) * 10 ** vault.decimals();
+        uint256 yTokenPps = yToken.convertToAssets(1) * 10**vault.decimals();
         console.log("yTokenPps", yTokenPps);
         assertEq(beforePps, yTokenPps);
 

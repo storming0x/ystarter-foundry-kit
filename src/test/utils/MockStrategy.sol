@@ -11,8 +11,8 @@ import "forge-std/console.sol";
  * for integrators on how to use BaseStrategy
  */
 
- // DEV NOTE: to simulate gains just transfer/airdrop tokens to this contract and call harvest
- // DEV NOTE: for instructive purposes we avoid using unchecked block in some spots
+// DEV NOTE: to simulate gains just transfer/airdrop tokens to this contract and call harvest
+// DEV NOTE: for instructive purposes we avoid using unchecked block in some spots
 contract MockStrategy is BaseStrategyInitializable {
     bool public delegateEverything;
 
@@ -50,7 +50,12 @@ contract MockStrategy is BaseStrategyInitializable {
         want = _want;
     }
 
-    function ethToWant(uint256 amtInWei) public pure override returns (uint256) {
+    function ethToWant(uint256 amtInWei)
+        public
+        pure
+        override
+        returns (uint256)
+    {
         return amtInWei; // 1:1 conversion for testing
     }
 
@@ -81,7 +86,7 @@ contract MockStrategy is BaseStrategyInitializable {
         totalDebt = totalDebt - _debtPayment;
 
         if (totalAssets > totalDebt) {
-                _profit = totalAssets - totalDebt;
+            _profit = totalAssets - totalDebt;
         } else {
             _loss = totalDebt - totalAssets;
         }
@@ -96,7 +101,11 @@ contract MockStrategy is BaseStrategyInitializable {
         console.log("called adjustPosition");
     }
 
-    function liquidatePosition(uint256 _amountNeeded) internal override returns (uint256 _liquidatedAmount, uint256 _loss) {
+    function liquidatePosition(uint256 _amountNeeded)
+        internal
+        override
+        returns (uint256 _liquidatedAmount, uint256 _loss)
+    {
         uint256 totalDebt = vault.strategies(address(this)).totalDebt;
         uint256 totalAssets = want.balanceOf(address(this));
         if (_amountNeeded > totalAssets) {
@@ -116,13 +125,22 @@ contract MockStrategy is BaseStrategyInitializable {
         // Nothing needed here because no additional tokens/tokenized positions for mock
     }
 
-    function protectedTokens() internal pure override returns (address[] memory) {
+    function protectedTokens()
+        internal
+        pure
+        override
+        returns (address[] memory)
+    {
         address[] memory protected = new address[](1);
         protected[0] = protectedToken;
         return protected;
     }
 
-    function liquidateAllPositions() internal override returns (uint256 amountFreed) {
+    function liquidateAllPositions()
+        internal
+        override
+        returns (uint256 amountFreed)
+    {
         uint256 totalAssets = want.balanceOf(address(this));
         amountFreed = totalAssets;
     }

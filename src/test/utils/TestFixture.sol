@@ -12,7 +12,6 @@ import {ExtendedDSTest} from "./ExtendedDSTest.sol";
 import {IVault} from "../../interfaces/IVault.sol";
 import "../../interfaces/IERC4626.sol";
 
-
 // NOTE: if the name of the strat or file changes this needs to be updated
 import {MockStrategy} from "./MockStrategy.sol";
 import {Token} from "./Token.sol";
@@ -79,13 +78,9 @@ contract TestFixture is ExtendedDSTest {
 
         // NOTE: assume Token is priced to 1 for simplicity
         minFuzzAmt = 10**vault.decimals() / 10;
-        maxFuzzAmt =
-            uint256(maxDollarNotional) *
-            10**vault.decimals();
+        maxFuzzAmt = uint256(maxDollarNotional) * 10**vault.decimals();
 
-        bigAmount =
-            uint256(bigDollarNotional) *
-            10**vault.decimals();
+        bigAmount = uint256(bigDollarNotional) * 10**vault.decimals();
 
         // add more labels to make your traces readable
         vm.label(address(vault), "Vault");

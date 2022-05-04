@@ -8,8 +8,22 @@
 
 - ERC4626 adapter to wrap yearn vaults.
 
+- Examples to integrate yearn vaults with V2 and ERC4626 interfaces.
+
 - Sample test suite. ([`tests`](src/test/))
 
+### Yearn Vault ->  ERC4626  Adapter
+
+([`contracts/VaultWrapper.sol`](contracts/VaultWrapper.sol))
+
+VaultWrapper is an ERC4626 router interface that makes v2 vaults compatible with the standard. A router/wrapper is needed per deployed vault. Contracts can interact with the router as they would with any ERC4626 since it adapts almost all the methods seamlessly with one exception. (See NOTE below).
+
+NOTE: an additional approval to the backing vault is required for users to withdraw their shares from vault through the adapter contract.
+
+```solidity
+vault.approve(address(router), type(uint256).max); //msg.sender is share holder
+yVault4626.withdraw(withdrawAmount, user, user);
+```
 
 ## Installation and Setup
 
