@@ -120,7 +120,12 @@ contract VaultWrapper is ERC20, IVaultWrapper, IERC4626 {
         override
         returns (uint256)
     {
-        return (assets * (10**_decimals)) / yVault.pricePerShare();
+        uint256 shares = (assets * (10**_decimals)) / yVault.pricePerShare();
+        uint256 vaultShares = yVault.balanceOf(address(this));
+        if (totalSupply() == 0) {
+            return (shares);
+        }
+        return (shares / vaultShares) * totalSupply();
     }
 
     function convertToAssets(uint256 shares)
@@ -129,7 +134,12 @@ contract VaultWrapper is ERC20, IVaultWrapper, IERC4626 {
         override
         returns (uint256)
     {
-        return (shares * yVault.pricePerShare()) / (10**_decimals);
+        uint256 amount = (shares * yVault.pricePerShare()) / (10**_decimals);
+        uint256 vaultShares = yVault.balanceOf(address(this));
+
+        return
+            (((amount * vaultShares) / totalSupply()) *
+                10**uint256(yVault.decimals())) / yVault.pricePerShare();
     }
 
     function previewDeposit(uint256 assets)
@@ -147,7 +157,7 @@ contract VaultWrapper is ERC20, IVaultWrapper, IERC4626 {
         override
         returns (uint256)
     {
-        return (shares * yVault.pricePerShare()) / (10**_decimals);
+        return convertToAssets(shares);
     }
 
     function previewWithdraw(uint256 assets)
@@ -156,7 +166,7 @@ contract VaultWrapper is ERC20, IVaultWrapper, IERC4626 {
         override
         returns (uint256)
     {
-        return (assets * (10**_decimals)) / yVault.pricePerShare();
+        return convertToShares(assets);
     }
 
     function previewRedeem(uint256 shares)
@@ -165,7 +175,7 @@ contract VaultWrapper is ERC20, IVaultWrapper, IERC4626 {
         override
         returns (uint256)
     {
-        return (shares * yVault.pricePerShare()) / (10**_decimals);
+        return convertToAssets(shares);
     }
 
     /*//////////////////////////////////////////////////////////////
@@ -243,8 +253,16 @@ contract VaultWrapper is ERC20, IVaultWrapper, IERC4626 {
         uint256 afterBal = _token.balanceOf(address(this));
         deposited = beforeBal - afterBal;
 
+        uint256 vaultShares = _vault.balanceOf(address(this));
+        uint256 proportionalShares = 0;
+        if (totalSupply() == 0) {
+            proportionalShares = (mintedShares);
+        } else {
+            proportionalShares = (mintedShares / vaultShares) * totalSupply();
+        }
+
         // afterDeposit custom logic
-        _mint(receiver, mintedShares);
+        _mint(receiver, proportionalShares);
 
         // `receiver` now has shares of `_vault` as balance, converted to `token` here
         // Issue a refund if not everything was deposited
@@ -268,8 +286,12 @@ contract VaultWrapper is ERC20, IVaultWrapper, IERC4626 {
         );
 
         if (availableShares == 0) revert NoAvailableShares();
+        uint256 vaultShares = _vault.balanceOf(address(this));
+        uint256 estimatedMaxShares = 0;
 
-        uint256 estimatedMaxShares = (amount * 10**uint256(_vault.decimals())) /
+        estimatedMaxShares =
+            (((amount * vaultShares) / totalSupply()) *
+                10**uint256(_vault.decimals())) /
             _vault.pricePerShare();
 
         if (estimatedMaxShares > availableShares)
