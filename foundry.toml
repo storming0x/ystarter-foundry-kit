@@ -2,6 +2,7 @@
 src = 'src'
 out = 'out'
 libs = ['lib']
+test = 'src/test'
 remappings = [
     'ds-test/=lib/ds-test/src/',
     '@yearnvaults/=lib/yearn-vaults/',

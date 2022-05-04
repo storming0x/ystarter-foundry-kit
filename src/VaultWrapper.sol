@@ -2,20 +2,43 @@
 pragma solidity >=0.8.0 <0.9.0;
 
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
+import {ERC20} from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import {Math} from "@openzeppelin/contracts/utils/math/Math.sol";
 import {VaultAPI} from "@yearnvaults/contracts/BaseStrategy.sol";
 import "./interfaces/IERC4626.sol";
 import "./interfaces/IVaultWrapper.sol";
 
-contract VaultWrapper is IVaultWrapper, IERC4626 {
-    address public immutable vault;
+contract VaultWrapper is ERC20, IVaultWrapper, IERC4626 {
+    VaultAPI public immutable yVault;
     address public immutable token;
-    uint256 public immutable decimals;
+    uint256 public immutable _decimals;
 
-    constructor(address _vault) {
-        vault = _vault;
-        token = VaultAPI(_vault).token();
-        decimals = VaultAPI(_vault).decimals();
+    constructor(VaultAPI _vault)
+        ERC20(
+            string(abi.encodePacked(_vault.name(), "4646adapter")),
+            string(abi.encodePacked(_vault.symbol(), "4646"))
+        )
+    {
+        yVault = _vault;
+        token = yVault.token();
+        _decimals = uint8(_vault.decimals());
+    }
+
+    function vault() external view returns (address) {
+        return address(yVault);
+    }
+
+    // NOTE: this number will be different from this token's totalSupply
+    function vaultTotalSupply() external view returns (uint256) {
+        return yVault.totalSupply();
+    }
+
+    /*//////////////////////////////////////////////////////////////
+                      ERC20 compatibility
+   //////////////////////////////////////////////////////////////*/
+
+    function decimals() public view override returns (uint8) {
+        return uint8(_decimals);
     }
 
     function asset() external view override returns (address) {
@@ -85,7 +108,7 @@ contract VaultWrapper is IVaultWrapper, IERC4626 {
   //////////////////////////////////////////////////////////////*/
 
     function totalAssets() public view override returns (uint256) {
-        return VaultAPI(vault).totalAssets();
+        return yVault.totalAssets();
     }
 
     function convertToShares(uint256 assets)
@@ -94,7 +117,7 @@ contract VaultWrapper is IVaultWrapper, IERC4626 {
         override
         returns (uint256)
     {
-        return (assets * (10**decimals)) / VaultAPI(vault).pricePerShare();
+        return (assets * (10**_decimals)) / yVault.pricePerShare();
     }
 
     function convertToAssets(uint256 shares)
@@ -103,7 +126,7 @@ contract VaultWrapper is IVaultWrapper, IERC4626 {
         override
         returns (uint256)
     {
-        return (shares * VaultAPI(vault).pricePerShare()) / (10**decimals);
+        return (shares * yVault.pricePerShare()) / (10**_decimals);
     }
 
     function previewDeposit(uint256 assets)
@@ -121,7 +144,7 @@ contract VaultWrapper is IVaultWrapper, IERC4626 {
         override
         returns (uint256)
     {
-        return (shares * VaultAPI(vault).pricePerShare()) / (10**decimals);
+        return (shares * yVault.pricePerShare()) / (10**_decimals);
     }
 
     function previewWithdraw(uint256 assets)
@@ -130,7 +153,7 @@ contract VaultWrapper is IVaultWrapper, IERC4626 {
         override
         returns (uint256)
     {
-        return (assets * (10**decimals)) / VaultAPI(vault).pricePerShare();
+        return (assets * (10**_decimals)) / yVault.pricePerShare();
     }
 
     function previewRedeem(uint256 shares)
@@ -139,7 +162,7 @@ contract VaultWrapper is IVaultWrapper, IERC4626 {
         override
         returns (uint256)
     {
-        return (shares * VaultAPI(vault).pricePerShare()) / (10**decimals);
+        return (shares * yVault.pricePerShare()) / (10**_decimals);
     }
 
     /*//////////////////////////////////////////////////////////////
@@ -153,7 +176,7 @@ contract VaultWrapper is IVaultWrapper, IERC4626 {
         returns (uint256)
     {
         _account; // TODO can acc custom logic per depositor
-        VaultAPI _bestVault = VaultAPI(vault);
+        VaultAPI _bestVault = yVault;
         uint256 _totalAssets = _bestVault.totalAssets();
         uint256 _depositLimit = _bestVault.depositLimit();
         if (_totalAssets >= _depositLimit) return 0;
@@ -175,11 +198,11 @@ contract VaultWrapper is IVaultWrapper, IERC4626 {
         override
         returns (uint256)
     {
-        return convertToAssets(VaultAPI(vault).balanceOf(owner));
+        return convertToAssets(this.balanceOf(owner));
     }
 
     function maxRedeem(address owner) external view override returns (uint256) {
-        return VaultAPI(vault).balanceOf(owner);
+        return this.balanceOf(owner);
     }
 
     function _deposit(
@@ -187,7 +210,7 @@ contract VaultWrapper is IVaultWrapper, IERC4626 {
         address receiver,
         address depositor
     ) internal returns (uint256 deposited, uint256 mintedShares) {
-        VaultAPI _vault = VaultAPI(vault);
+        VaultAPI _vault = yVault;
         IERC20 _token = IERC20(token);
 
         if (amount == type(uint256).max) {
@@ -212,12 +235,13 @@ contract VaultWrapper is IVaultWrapper, IERC4626 {
         //       overflow if trying to adjust the number of shares by the share price.
         uint256 beforeBal = _token.balanceOf(address(this));
 
-        mintedShares = _vault.deposit(amount, receiver);
+        mintedShares = _vault.deposit(amount, address(this));
 
         uint256 afterBal = _token.balanceOf(address(this));
         deposited = beforeBal - afterBal;
 
         // afterDeposit custom logic
+        _mint(receiver, mintedShares);
 
         // `receiver` now has shares of `_vault` as balance, converted to `token` here
         // Issue a refund if not everything was deposited
@@ -231,16 +255,12 @@ contract VaultWrapper is IVaultWrapper, IERC4626 {
         address receiver,
         address sender
     ) internal returns (uint256 withdrawn, uint256 burntShares) {
-        VaultAPI _vault = VaultAPI(vault);
+        VaultAPI _vault = yVault;
 
         // Start with the total shares that `sender` has
-        // Restrict by the allowance that `sender` has to this contract
         // Limit by maximum withdrawal size from each vault
         uint256 availableShares = Math.min(
-            Math.min(
-                _vault.balanceOf(sender),
-                _vault.allowance(sender, address(this))
-            ),
+            this.balanceOf(sender),
             _vault.maxAvailableShares()
         );
 
@@ -252,9 +272,6 @@ contract VaultWrapper is IVaultWrapper, IERC4626 {
         if (estimatedMaxShares > availableShares)
             revert NotEnoughAvailableSharesForAmount();
 
-        // move shares to this contract before withdrawing
-        _vault.transferFrom(sender, address(this), estimatedMaxShares);
-
         // beforeWithdraw custom logic
 
         // withdraw from vault and get total used shares
@@ -264,6 +281,7 @@ contract VaultWrapper is IVaultWrapper, IERC4626 {
         uint256 unusedShares = estimatedMaxShares - burntShares;
 
         // afterWithdraw custom logic
+        _burn(sender, estimatedMaxShares);
 
         // return unusedShares to sender
         if (unusedShares > 0)

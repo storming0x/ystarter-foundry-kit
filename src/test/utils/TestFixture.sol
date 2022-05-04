@@ -4,6 +4,7 @@ pragma abicoder v2;
 
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
+import {VaultAPI} from "@yearnvaults/contracts/BaseStrategy.sol";
 import "forge-std/console.sol";
 import {Vm} from "forge-std/Vm.sol";
 
@@ -24,8 +25,8 @@ string constant vaultArtifact = "artifacts/Vault.json";
 contract TestFixture is ExtendedDSTest {
     using SafeERC20 for IERC20;
 
-    IVault public vault;
-    IERC4626 public yToken;
+    VaultAPI public vault;
+    IERC4626 public vaultWrapper;
     MockStrategy public strategy;
     IERC20 public weth;
     IERC20 public want;
@@ -71,10 +72,10 @@ contract TestFixture is ExtendedDSTest {
             keeper,
             strategist
         );
-        vault = IVault(_vault);
+        vault = VaultAPI(_vault);
         strategy = MockStrategy(_strategy);
-        VaultWrapper _vaultWrapper = new VaultWrapper(_vault);
-        yToken = IERC4626(_vaultWrapper);
+        VaultWrapper _vaultWrapper = new VaultWrapper(vault);
+        vaultWrapper = IERC4626(_vaultWrapper);
 
         // NOTE: assume Token is priced to 1 for simplicity
         minFuzzAmt = 10**vault.decimals() / 10;
@@ -86,7 +87,7 @@ contract TestFixture is ExtendedDSTest {
         vm.label(address(vault), "Vault");
         vm.label(address(strategy), "Strategy");
         vm.label(address(want), "Want");
-        vm.label(address(yToken), "VaultWrapper");
+        vm.label(address(vaultWrapper), "VaultWrapper");
         vm.label(gov, "Gov");
         vm.label(user, "User");
         vm.label(whale, "Whale");

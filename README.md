@@ -16,14 +16,13 @@
 
 ([`contracts/VaultWrapper.sol`](contracts/VaultWrapper.sol))
 
-VaultWrapper is an ERC4626 router interface that makes v2 vaults compatible with the standard. A router/wrapper is needed per deployed vault. Contracts can interact with the router as they would with any ERC4626 since it adapts almost all the methods seamlessly with one exception. (See NOTE below).
+VaultWrapper is an ERC4626 router interface that makes v2 vaults compatible with the standard. A router/wrapper is needed per deployed vault. Contracts can interact with the router as they would with any ERC4626 since it adapts almost all the methods seamlessly.
 
-NOTE: an additional approval to the backing vault is required for users to withdraw their shares from vault through the adapter contract.
+NOTE: This adapter makes vault operations more gas expensive since its 
+doing additional calls to normal vault methods like deposit/operations to wrap the vault tokens into the 4626 interface adapter.
 
-```solidity
-vault.approve(address(router), type(uint256).max); //msg.sender is share holder
-yVault4626.withdraw(withdrawAmount, user, user);
-```
+Given the flexibility, the gas increase tradeoff may be good for integrators using multiple 4626 to keep code cohesive for all yield sources.
+
 
 ## Installation and Setup
 
