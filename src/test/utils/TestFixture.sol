@@ -4,24 +4,30 @@ pragma abicoder v2;
 
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
-import {ExtendedDSTest} from "./ExtendedDSTest.sol";
-import {Test} from "forge-std/Test.sol";
+import "forge-std/console.sol";
 import {Vm} from "forge-std/Vm.sol";
-import {IVault} from "../../interfaces/Vault.sol";
+
+import {VaultWrapper} from "../../VaultWrapper.sol";
+import {ExtendedDSTest} from "./ExtendedDSTest.sol";
+import {IVault} from "../../interfaces/IVault.sol";
+import "../../interfaces/IERC4626.sol";
+
 
 // NOTE: if the name of the strat or file changes this needs to be updated
-import {Strategy} from "../../Strategy.sol";
+import {MockStrategy} from "./MockStrategy.sol";
+import {Token} from "./Token.sol";
 
 // Artifact paths for deploying from the deps folder, assumes that the command is run from
 // the project root.
 string constant vaultArtifact = "artifacts/Vault.json";
 
 // Base fixture deploying Vault
-contract StrategyFixture is ExtendedDSTest, Test {
+contract TestFixture is ExtendedDSTest {
     using SafeERC20 for IERC20;
 
     IVault public vault;
-    Strategy public strategy;
+    IERC4626 public yToken;
+    MockStrategy public strategy;
     IERC20 public weth;
     IERC20 public want;
 
@@ -50,13 +56,10 @@ contract StrategyFixture is ExtendedDSTest, Test {
     uint256 public constant DELTA = 10**5;
 
     function setUp() public virtual {
-        _setTokenPrices();
-        _setTokenAddrs();
-
-        // Choose a token from the tokenAddrs mapping, see _setTokenAddrs for options
-        string memory token = "DAI";
-        weth = IERC20(tokenAddrs["WETH"]);
-        want = IERC20(tokenAddrs[token]);
+        // NOTE: skip a few seconds to avoid block.timestamp == 0
+        skip(10 seconds);
+        Token _token = new Token(uint8(18));
+        want = IERC20(_token);
 
         (address _vault, address _strategy) = deployVaultAndStrategy(
             address(want),
@@ -70,20 +73,25 @@ contract StrategyFixture is ExtendedDSTest, Test {
             strategist
         );
         vault = IVault(_vault);
-        strategy = Strategy(_strategy);
+        strategy = MockStrategy(_strategy);
+        VaultWrapper _vaultWrapper = new VaultWrapper(_vault);
+        yToken = IERC4626(_vaultWrapper);
 
+        // NOTE: assume Token is priced to 1 for simplicity
         minFuzzAmt = 10**vault.decimals() / 10;
         maxFuzzAmt =
-            uint256(maxDollarNotional / tokenPrices[token]) *
+            uint256(maxDollarNotional) *
             10**vault.decimals();
+
         bigAmount =
-            uint256(bigDollarNotional / tokenPrices[token]) *
+            uint256(bigDollarNotional) *
             10**vault.decimals();
 
         // add more labels to make your traces readable
         vm.label(address(vault), "Vault");
         vm.label(address(strategy), "Strategy");
         vm.label(address(want), "Want");
+        vm.label(address(yToken), "VaultWrapper");
         vm.label(gov, "Gov");
         vm.label(user, "User");
         vm.label(whale, "Whale");
@@ -129,7 +137,7 @@ contract StrategyFixture is ExtendedDSTest, Test {
 
     // Deploys a strategy
     function deployStrategy(address _vault) public returns (address) {
-        Strategy _strategy = new Strategy(_vault);
+        MockStrategy _strategy = new MockStrategy(_vault);
 
         return address(_strategy);
     }
@@ -159,7 +167,7 @@ contract StrategyFixture is ExtendedDSTest, Test {
 
         vm.prank(_strategist);
         _strategyAddr = deployStrategy(_vaultAddr);
-        Strategy _strategy = Strategy(_strategyAddr);
+        MockStrategy _strategy = MockStrategy(_strategyAddr);
 
         vm.prank(_strategist);
         _strategy.setKeeper(_keeper);
@@ -168,25 +176,5 @@ contract StrategyFixture is ExtendedDSTest, Test {
         _vault.addStrategy(_strategyAddr, 10_000, 0, type(uint256).max, 1_000);
 
         return (address(_vault), address(_strategy));
-    }
-
-    function _setTokenAddrs() internal {
-        tokenAddrs["WBTC"] = 0x2260FAC5E5542a773Aa44fBCfeDf7C193bc2C599;
-        tokenAddrs["YFI"] = 0x0bc529c00C6401aEF6D220BE8C6Ea1667F6Ad93e;
-        tokenAddrs["WETH"] = 0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2;
-        tokenAddrs["LINK"] = 0x514910771AF9Ca656af840dff83E8264EcF986CA;
-        tokenAddrs["USDT"] = 0xdAC17F958D2ee523a2206206994597C13D831ec7;
-        tokenAddrs["DAI"] = 0x6B175474E89094C44Da98b954EedeAC495271d0F;
-        tokenAddrs["USDC"] = 0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48;
-    }
-
-    function _setTokenPrices() internal {
-        tokenPrices["WBTC"] = 60_000;
-        tokenPrices["WETH"] = 4_000;
-        tokenPrices["LINK"] = 20;
-        tokenPrices["YFI"] = 35_000;
-        tokenPrices["USDT"] = 1;
-        tokenPrices["USDC"] = 1;
-        tokenPrices["DAI"] = 1;
     }
 }

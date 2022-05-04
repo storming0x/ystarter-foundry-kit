@@ -1,38 +1,28 @@
-# Yearn Strategy Foundry Mix
+# Yearn Starter Kit
+
+**All code in this repository is meant for instructional purposes only is not audited or considered safe for production.**
 
 ## What you'll find here
 
-- Basic Solidity Smart Contract for creating your own Yearn Strategy ([`Strategy.sol`](src/Strategy.sol))
+- Basic example Solidity Smart Contracts for integrating with Yearn Vaults.
 
-- Configured github template with Foundry framework for starting your yearn strategy project.
+- ERC4626 adapter to wrap yearn vaults.
 
 - Sample test suite. ([`tests`](src/test/))
 
-
-## How does it work for the User
-
-Let's say Alice holds 100 DAI and wants to start earning yield % on them.
-
-For this Alice needs to `DAI.approve(vault.address, 100)`.
-
-Then Alice will call `Vault.deposit(100)`.
-
-Vault will then transfer 100 DAI from Alice to itself, and mint Alice the corresponding shares.
-
-Alice can then redeem those shares using `Vault.withdrawAll()` for the corresponding DAI balance (exchanged at `Vault.pricePerShare()`).
 
 ## Installation and Setup
 
 1. To install with [Foundry](https://github.com/gakonst/foundry).
 
-2. Fork this repository (easier) or create a new repository using it as template. [Create from template](https://docs.github.com/en/repositories/creating-and-managing-repositories/creating-a-repository-from-a-template)
+2. Fork this repository.
 
 3. Clone your newly created repository recursively to include modules.
 
 ```sh
-git clone --recursive https://github.com/myuser/foundry-yearn-strategy
+git clone --recursive https://github.com/storming0x/ystarter-foundry-kit.git
 
-cd foundry-yearn-strategy
+cd ystarter-foundry-kit
 ```
 
 NOTE: if you create from template you may need to run the following command to fetch the git submodules (.gitmodules for exact releases) `git submodule init && git submodule update`
@@ -58,22 +48,9 @@ make test
 
 ## Basic Use
 
-To deploy the demo Yearn Strategy in a development environment:
+To deploy the demo Yearn Vaults and ERC4626 adapter in a development environment:
 
 TODO
-
-## Implementing Strategy Logic
-
-[`contracts/Strategy.sol`](contracts/Strategy.sol) is where you implement your own logic for your strategy. In particular:
-
-- Create a descriptive name for your strategy via `Strategy.name()`.
-- Invest your want tokens via `Strategy.adjustPosition()`.
-- Take profits and report losses via `Strategy.prepareReturn()`.
-- Unwind enough of your position to payback withdrawals via `Strategy.liquidatePosition()`.
-- Unwind all of your positions via `Strategy.exitPosition()`.
-- Fill in a way to estimate the total `want` tokens managed by the strategy via `Strategy.estimatedTotalAssets()`.
-- Migrate all the positions managed by your strategy via `Strategy.prepareMigration()`.
-- Make a list of all position tokens that should be protected against movements via `Strategy.protectedTokens()`.
 
 ## Testing
 
@@ -87,15 +64,15 @@ Run tests with traces (very useful)
 ```sh
 make trace
 ```
-Run specific test contract (e.g. `test/StrategyOperation.t.sol`)
+Run specific test contract (e.g. `test/MyTest.t.sol`)
 
 ```sh
-make test-contract contract=StrategyOperationsTest
+make test-contract contract=MyTest
 ```
-Run specific test contract with traces (e.g. `test/StrategyOperation.t.sol`)
+Run specific test contract with traces (e.g. `test/MyTest.t.sol`)
 
 ```sh
-make trace-contract contract=StrategyOperationsTest
+make trace-contract contract=MyTest
 ```
 
 See here for some tips on testing [`Testing Tips`](https://book.getfoundry.sh/forge/tests.html)
