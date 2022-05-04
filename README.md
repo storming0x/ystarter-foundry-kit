@@ -1,14 +1,12 @@
 # Yearn Starter Kit
 
-**All code in this repository is meant for instructional purposes only is not audited or considered safe for production.**
+**All code in this repository is meant for instructional purposes only. Is not audited or considered safe for production.**
 
 ## What you'll find here
 
-- Basic example Solidity Smart Contracts for integrating with Yearn Vaults.
+- Basic example Solidity Smart Contracts for integrating with Yearn Vaults. Both V2 and ERC4626 interfaces.
 
 - ERC4626 adapter to wrap yearn vaults.
-
-- Examples to integrate yearn vaults with V2 and ERC4626 interfaces.
 
 - Sample test suite. ([`tests`](src/test/))
 

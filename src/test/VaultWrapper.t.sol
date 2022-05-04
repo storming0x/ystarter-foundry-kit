@@ -41,10 +41,9 @@ contract VaultWrapperTest is TestFixture {
         assertEq(vaultWrapper.maxRedeem(user), _shares);
         assertEq(vault.balanceOf(address(vaultWrapper)), _shares);
         assertEq(vaultWrapper.totalSupply(), _shares);
-        
     }
 
-    function testDeposit(uint _amount) public {
+    function testDeposit(uint256 _amount) public {
         vm.assume(_amount > minFuzzAmt && _amount < maxFuzzAmt);
         deal(address(want), user, _amount);
         vm.startPrank(user);
