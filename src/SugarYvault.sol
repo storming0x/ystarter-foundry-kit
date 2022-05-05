@@ -11,7 +11,7 @@ import {VaultAPI} from "@yearnvaults/contracts/BaseStrategy.sol";
  *   The donator assigns approves a token to Sugar Contract and can StartSharingYield with a receiver.
  *   The receiver can claim the donated yield that's "streamed" every time yield is realized in vault.
  *   The donator can stopSharingYield() any time and receiver won't be able to claim yield after this.
- *   
+ *
  *
  *   // TODO: tokenized this into an NFT or two NFT one for donator and one for receiver keeping same IDs
  *   // TODO: add support for migrating yield source as admin. Require token matches
@@ -22,11 +22,20 @@ contract SugarYvault is Ownable {
                                  EVENTS
     //////////////////////////////////////////////////////////////*/
 
-    event StartShare(address indexed receiver, address indexed donator, uint256 amount);
+    event StartShare(
+        address indexed receiver,
+        address indexed donator,
+        uint256 amount
+    );
 
     event StopShare(address indexed donator, uint256 amountReturned);
 
-    event Claimed(address indexed receiver, address indexed donator, uint256 claimed, uint256 newShareAmount);
+    event Claimed(
+        address indexed receiver,
+        address indexed donator,
+        uint256 claimed,
+        uint256 newShareAmount
+    );
 
     /*//////////////////////////////////////////////////////////////
                          METADATA STORAGE/LOGIC
@@ -45,11 +54,14 @@ contract SugarYvault is Ownable {
         token.approve(address(vault), type(uint256).max);
     }
 
-    function startSharingYield(address receiver, uint256 amount) public returns (uint256 shares) {
+    function startSharingYield(address receiver, uint256 amount)
+        public
+        returns (uint256 shares)
+    {
         require(receiver != address(0), "ADDRESS_NOT_ZERO");
         require(receiver != msg.sender, "SELF_SHARE");
         require(amount > 0, "AMT_NOT_ZERO");
-        require(donatorToReceiver[msg.sender] == address(0), "DONATOR_NOT_SET"); 
+        require(donatorToReceiver[msg.sender] == address(0), "DONATOR_NOT_SET");
         SafeERC20.safeTransferFrom(token, msg.sender, address(this), amount);
         shares = vault.deposit(amount);
         tokenBalances[msg.sender] += amount;
@@ -99,12 +111,19 @@ contract SugarYvault is Ownable {
 
         claimed = vault.withdraw(_sharesToClaim, msg.sender);
         // NOTE: ensure donator still has deposited capital after side effect
-        require(convertToAssets(_remainingShares) >= _tokenBalance, "CLAIM_EXCEED");
+        require(
+            convertToAssets(_remainingShares) >= _tokenBalance,
+            "CLAIM_EXCEED"
+        );
 
         emit Claimed(msg.sender, _donator, claimed, _remainingShares);
     }
 
-    function claimable(address _donator, address _receiver) external view returns (uint256 amount) {
+    function claimable(address _donator, address _receiver)
+        external
+        view
+        returns (uint256 amount)
+    {
         if (donatorToReceiver[_donator] != _receiver) return 0;
 
         // NOTE: checks in startSharingYield ensure these values are not zero
@@ -127,19 +146,11 @@ contract SugarYvault is Ownable {
                         HELPER METHODS
     //////////////////////////////////////////////////////////////*/
 
-    function convertToAssets(uint256 shares)
-        public
-        view
-        returns (uint256)
-    {
+    function convertToAssets(uint256 shares) public view returns (uint256) {
         return (shares * vault.pricePerShare()) / (10**vault.decimals());
     }
 
-    function convertToShares(uint256 assets)
-        public
-        view
-        returns (uint256)
-    {
+    function convertToShares(uint256 assets) public view returns (uint256) {
         return (assets * (10**vault.decimals())) / vault.pricePerShare();
     }
 }

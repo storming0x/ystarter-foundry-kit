@@ -6,7 +6,7 @@ import {StrategyParams} from "@yearnvaults/contracts/BaseStrategy.sol";
 import {SugarYvault} from "../SugarYvault.sol";
 import "forge-std/console.sol";
 
-// TODO: add more tests for failures and edge cases 
+// TODO: add more tests for failures and edge cases
 contract SugarYvaultTest is TestFixture {
     SugarYvault public sugar;
 
@@ -21,23 +21,15 @@ contract SugarYvaultTest is TestFixture {
                         HELPER METHODS
     //////////////////////////////////////////////////////////////*/
 
-    function convertToAssets(uint256 shares)
-        public
-        view
-        returns (uint256)
-    {
+    function convertToAssets(uint256 shares) public view returns (uint256) {
         return (shares * vault.pricePerShare()) / (10**vault.decimals());
     }
 
-    function convertToShares(uint256 assets)
-        public
-        view
-        returns (uint256)
-    {
+    function convertToShares(uint256 assets) public view returns (uint256) {
         return (assets * (10**vault.decimals())) / vault.pricePerShare();
     }
 
-     /*//////////////////////////////////////////////////////////////
+    /*//////////////////////////////////////////////////////////////
                         HELPER METHODS
     //////////////////////////////////////////////////////////////*/
 
@@ -54,11 +46,11 @@ contract SugarYvaultTest is TestFixture {
         deal(address(want), whale, _amount);
         vm.startPrank(whale);
         want.approve(address(sugar), _amount);
-        
+
         // execution
         uint256 shares = sugar.startSharingYield(user, _amount);
         vm.stopPrank();
-        
+
         // asserts
         assertEq(sugar.tokenBalances(whale), _amount);
         assertEq(sugar.shareBalances(whale), convertToShares(_amount));
@@ -95,7 +87,7 @@ contract SugarYvaultTest is TestFixture {
         want.approve(address(sugar), _amount);
         uint256 initialShares = sugar.startSharingYield(user, _amount);
         vm.stopPrank();
-        
+
         // Harvest 1: Send funds through the strategy
         skip(1);
         vm.prank(strategist);
@@ -121,6 +113,9 @@ contract SugarYvaultTest is TestFixture {
         assertEq(want.balanceOf(user), _claimed);
         assertGt(initialShares, sugar.shareBalances(whale));
         assertTrue(want.balanceOf(whale) >= _amount);
-        assertTrue(convertToAssets(sugar.shareBalances(whale)) >= sugar.tokenBalances(whale));
+        assertTrue(
+            convertToAssets(sugar.shareBalances(whale)) >=
+                sugar.tokenBalances(whale)
+        );
     }
 }

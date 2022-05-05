@@ -6,7 +6,7 @@ import {StrategyParams} from "@yearnvaults/contracts/BaseStrategy.sol";
 import {SugarVault} from "../SugarVault.sol";
 import "forge-std/console.sol";
 
-// TODO: add more tests for failures and edge cases 
+// TODO: add more tests for failures and edge cases
 contract SugarVaultTest is TestFixture {
     SugarVault public sugar;
 
@@ -30,16 +30,22 @@ contract SugarVaultTest is TestFixture {
         deal(address(want), whale, _amount);
         vm.startPrank(whale);
         want.approve(address(sugar), _amount);
-        
+
         // execution
         uint256 shares = sugar.startSharingYield(user, _amount);
         vm.stopPrank();
-        
+
         // asserts
         assertEq(sugar.tokenBalances(whale), _amount);
-        assertEq(sugar.shareBalances(whale), vaultWrapper.convertToShares(_amount));
+        assertEq(
+            sugar.shareBalances(whale),
+            vaultWrapper.convertToShares(_amount)
+        );
         assertEq(shares, vaultWrapper.convertToShares(_amount));
-        assertEq(vaultWrapper.balanceOf(address(sugar)), vaultWrapper.convertToShares(_amount));
+        assertEq(
+            vaultWrapper.balanceOf(address(sugar)),
+            vaultWrapper.convertToShares(_amount)
+        );
         assertEq(want.balanceOf(whale), 0);
     }
 
@@ -71,7 +77,7 @@ contract SugarVaultTest is TestFixture {
         want.approve(address(sugar), _amount);
         uint256 initialShares = sugar.startSharingYield(user, _amount);
         vm.stopPrank();
-        
+
         // Harvest 1: Send funds through the strategy
         skip(1);
         vm.prank(strategist);
@@ -97,6 +103,9 @@ contract SugarVaultTest is TestFixture {
         assertEq(want.balanceOf(user), _claimed);
         assertGt(initialShares, sugar.shareBalances(whale));
         assertTrue(want.balanceOf(whale) >= _amount);
-        assertTrue(vaultWrapper.convertToAssets(sugar.shareBalances(whale)) >= sugar.tokenBalances(whale));
+        assertTrue(
+            vaultWrapper.convertToAssets(sugar.shareBalances(whale)) >=
+                sugar.tokenBalances(whale)
+        );
     }
 }
