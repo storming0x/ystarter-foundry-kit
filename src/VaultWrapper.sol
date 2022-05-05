@@ -8,6 +8,8 @@ import {VaultAPI} from "@yearnvaults/contracts/BaseStrategy.sol";
 import "./interfaces/IERC4626.sol";
 import "./interfaces/IVaultWrapper.sol";
 
+// TODO: integrate solmate ERC20 instead OZ. 
+// Needs to extract VaultAPI interface out of BaseStrategy to avoid collision
 contract VaultWrapper is ERC20, IVaultWrapper, IERC4626 {
     VaultAPI public immutable yVault;
     address public immutable token;
@@ -49,6 +51,7 @@ contract VaultWrapper is ERC20, IVaultWrapper, IERC4626 {
                       DEPOSIT/WITHDRAWAL LOGIC
   //////////////////////////////////////////////////////////////*/
 
+    
     function deposit(uint256 assets, address receiver)
         public
         override
@@ -71,6 +74,7 @@ contract VaultWrapper is ERC20, IVaultWrapper, IERC4626 {
         emit Deposit(msg.sender, receiver, assets, shares);
     }
 
+    // TODO: add allowance check to use owner argument
     function withdraw(
         uint256 assets,
         address receiver,
@@ -85,7 +89,8 @@ contract VaultWrapper is ERC20, IVaultWrapper, IERC4626 {
         emit Withdraw(msg.sender, receiver, owner, _withdrawn, _burntShares);
         return _burntShares;
     }
-
+    
+    // TODO: add allowance check to use owner argument
     function redeem(
         uint256 shares,
         address receiver,

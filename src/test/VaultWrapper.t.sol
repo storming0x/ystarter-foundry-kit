@@ -17,6 +17,12 @@ contract VaultWrapperTest is TestFixture {
         assertEq(vault.depositLimit(), type(uint256).max);
     }
 
+    function testSetupWrapperOK() public {
+        console.log("address of wrapper", address(vaultWrapper));
+        assertTrue(address(0) != address(vaultWrapper));
+        assertEq(vaultWrapper.asset(), address(want));
+    }
+
     function testSetupStrategyOK() public {
         console.log("address of strategy", address(strategy));
         assertTrue(address(0) != address(strategy));
