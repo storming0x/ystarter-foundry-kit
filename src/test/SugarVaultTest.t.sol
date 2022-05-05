@@ -3,7 +3,7 @@ pragma solidity ^0.8.12;
 
 import {TestFixture} from "./utils/TestFixture.sol";
 import {StrategyParams} from "@yearnvaults/contracts/BaseStrategy.sol";
-import {SugarVault} from "../SugarVault.sol";
+import {SugarVault} from "../examples/SugarVault.sol";
 import "forge-std/console.sol";
 
 // TODO: add more tests for failures and edge cases

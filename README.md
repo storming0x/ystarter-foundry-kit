@@ -8,23 +8,27 @@
 
 - ERC4626 adapter to wrap yearn vaults.
 
+- Example Contracts ([`examples`](src/examples/))
+
 - Sample test suite. ([`tests`](src/test/))
 
 ### Yearn Vault ->  ERC4626  Adapter
 
 ([`contracts/VaultWrapper.sol`](contracts/VaultWrapper.sol))
 
-VaultWrapper is an ERC4626 router interface that makes v2 vaults compatible with the standard. A router/wrapper is needed per deployed vault. Contracts can interact with the router as they would with any ERC4626 since it adapts almost all the methods seamlessly.
+VaultWrapper is an ERC4626 adapter interface that makes v2 vaults compatible with the standard. A wrapper is needed per deployed vault. Contracts can interact with the wrapper as they would with any ERC4626 since it adapts the standard completely.
 
-NOTE: This adapter makes vault operations more gas expensive since its 
-doing additional calls to normal vault methods like deposit/operations to wrap the vault tokens into the 4626 interface adapter.
+NOTE: This adapter makes all V2 vault operations more gas expensive since its 
+doing additional calls to normal vault methods like deposit/operations to wrap the vault tokens into the ERC4626 adapter.
 
-Given the flexibility, the gas increase tradeoff may be good for integrators using multiple 4626 to keep code cohesive for all yield sources.
+Given the flexibility, the gas increase tradeoff may be good for integrators using multiple ERC4626 to keep code cohesive for all yield sources.
+
+Also future proofs integrations since V3 vaults will be ERC4626 compatible on launch.
 
 ### Contract Example that works with compatible ERC4626 tokens and Yearn V2 VaultsAPI
 
-([`contracts/SugarVault.sol`](contracts/SugarVault.sol))
-([`contracts/SugarYvault.sol`](contracts/SugarYvault.sol))
+([`contracts/examples/SugarVault.sol`](contracts/examples/SugarVault.sol))
+([`contracts/examples/SugarYvault.sol`](contracts/examples/SugarYvault.sol))
 
 SugarVault is an example contract that works internally with any ERC4626 compatible yield token.
 SugarYvault has the same functionality but uses Yearn V2 interfaces.
