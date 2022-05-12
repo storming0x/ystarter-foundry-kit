@@ -17,8 +17,8 @@ contract VaultWrapper is ERC20, IVaultWrapper, IERC4626 {
 
     constructor(VaultAPI _vault)
         ERC20(
-            string(abi.encodePacked(_vault.name(), "4646adapter")),
-            string(abi.encodePacked(_vault.symbol(), "4646"))
+            string(abi.encodePacked(_vault.name(), "4626adapter")),
+            string(abi.encodePacked(_vault.symbol(), "4626"))
         )
     {
         yVault = _vault;
