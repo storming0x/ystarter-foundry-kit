@@ -64,7 +64,7 @@ contract SugarYvault is Ownable {
         require(donatorToReceiver[msg.sender] == address(0), "DONATOR_NOT_SET");
         SafeERC20.safeTransferFrom(token, msg.sender, address(this), amount);
         shares = vault.deposit(amount);
-        tokenBalances[msg.sender] += amount;
+        tokenBalances[msg.sender] += amount; // :eyes:
         shareBalances[msg.sender] += shares;
         // donator can only have one receiver for yield and can switch it here
         donatorToReceiver[msg.sender] = receiver;
@@ -85,7 +85,7 @@ contract SugarYvault is Ownable {
         donatorToReceiver[msg.sender] = address(0);
         receiverToDonator[_receiver][msg.sender] = false;
 
-        amount = vault.withdraw(_shares, msg.sender);
+        amount = vault.withdraw(_shares, msg.sender); // :eyes:
 
         emit StopShare(msg.sender, amount);
 
@@ -109,7 +109,7 @@ contract SugarYvault is Ownable {
 
         shareBalances[_donator] = _remainingShares;
 
-        claimed = vault.withdraw(_sharesToClaim, msg.sender);
+        claimed = vault.withdraw(_sharesToClaim, msg.sender); // :eyes:
         // NOTE: ensure donator still has deposited capital after side effect
         require(
             convertToAssets(_remainingShares) >= _tokenBalance,

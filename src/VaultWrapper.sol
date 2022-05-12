@@ -8,7 +8,6 @@ import {VaultAPI} from "@yearnvaults/contracts/BaseStrategy.sol";
 import "./interfaces/IERC4626.sol";
 import "./interfaces/IVaultWrapper.sol";
 
-// TODO: integrate solmate ERC20 instead OZ.
 // Needs to extract VaultAPI interface out of BaseStrategy to avoid collision
 contract VaultWrapper is ERC20, IVaultWrapper, IERC4626 {
     VaultAPI public immutable yVault;
@@ -285,7 +284,7 @@ contract VaultWrapper is ERC20, IVaultWrapper, IERC4626 {
         uint256 unusedShares = estimatedMaxShares - burntShares;
 
         // afterWithdraw custom logic
-        _burn(sender, estimatedMaxShares);
+        _burn(sender, burntShares);
 
         // return unusedShares to sender
         if (unusedShares > 0)

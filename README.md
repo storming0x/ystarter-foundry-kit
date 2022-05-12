@@ -1,5 +1,7 @@
 # Yearn Starter Kit
 
+### Hardhat example: https://github.com/storming0x/ystarter-hardhat-kit
+
 **All code in this repository is meant for instructional purposes only. Is not audited or considered safe for production.**
 
 ## What you'll find here
